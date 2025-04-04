@@ -50,6 +50,8 @@ class Product extends Model
     {
     parent::boot();
 
+    
+
     static::saving(function ($model) {
     $postfix = $model->category_id 
     ? '-' . '-bookwindow' 

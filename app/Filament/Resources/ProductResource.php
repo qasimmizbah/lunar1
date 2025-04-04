@@ -103,6 +103,9 @@ class ProductResource extends Resource
                             $set('slug', Str::slug($state));
                             }),
 
+
+                            
+
                             Forms\Components\TextInput::make('slug')
                             ->required()
                             ->live()
