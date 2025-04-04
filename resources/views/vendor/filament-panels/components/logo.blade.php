@@ -1,0 +1,1 @@
+<h2>TBS Laravel CMS</h2>
