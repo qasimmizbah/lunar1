@@ -14,6 +14,13 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
+use App\Imports\CategoriesImport;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\CreateAction;
+use Maatwebsite\Excel\Facades\Excel;
+
+
 
 class CategoryResource extends Resource
 {
@@ -84,6 +91,29 @@ class CategoryResource extends Resource
                 
                 
             ])
+            ->headerActions([
+                CreateAction::make(),
+                Action::make('import')
+                    ->label('Import Categories')
+                    ->action(function (array $data) {
+                        $file = storage_path('app/public/' . $data['file']);
+                        if (!file_exists($file)) {
+                            throw new \Exception("File not found: " . $file);
+                        }
+
+                        Excel::import(new CategoriesImport(), $file);
+                    })
+                    ->form([
+                        FileUpload::make('file')
+                            ->label('Excel File')
+                            ->required()
+                            ->acceptedFileTypes([
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-excel',
+                            ]),
+                    ]),
+            ])
+            
             ->filters([
                 //
             ])
@@ -110,6 +140,7 @@ class CategoryResource extends Resource
             'index' => Pages\ListCategories::route('/'),
             'create' => Pages\CreateCategory::route('/create'),
             'edit' => Pages\EditCategory::route('/{record}/edit'),
+            'import' => Pages\ImportCategories::route('/import'),
         ];
     }
 }

@@ -12,6 +12,11 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Imports\ProductionsImport;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\CreateAction;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductionResource extends Resource
 {
@@ -67,6 +72,28 @@ class ProductionResource extends Resource
             ->limit('50'),
         
         ])
+        ->headerActions([
+            CreateAction::make(),
+            Action::make('import')
+                ->label('Import Publication')
+                ->action(function (array $data) {
+                    $file = storage_path('app/public/' . $data['file']);
+                    if (!file_exists($file)) {
+                        throw new \Exception("File not found: " . $file);
+                    }
+
+                    Excel::import(new ProductionsImport(), $file);
+                })
+                ->form([
+                    FileUpload::make('file')
+                        ->label('Excel File')
+                        ->required()
+                        ->acceptedFileTypes([
+                            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                            'application/vnd.ms-excel',
+                        ]),
+                ]),
+        ])
             ->filters([
                 //
             ])
@@ -93,6 +120,8 @@ class ProductionResource extends Resource
             'index' => Pages\ListProductions::route('/'),
             'create' => Pages\CreateProduction::route('/create'),
             'edit' => Pages\EditProduction::route('/{record}/edit'),
+            'import' => Pages\ImportProductions::route('/import'),
+            
         ];
     }
 }

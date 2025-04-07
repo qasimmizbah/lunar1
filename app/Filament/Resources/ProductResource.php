@@ -17,6 +17,11 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Enums\ProductTypeEnum;
 use Illuminate\Support\Str;
 use Filament\Forms\Components\Select;
+use App\Imports\ProductsImport;
+use Filament\Forms\Components\FileUpload;
+use Filament\Tables\Actions\Action;
+use Filament\Tables\Actions\CreateAction;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ProductResource extends Resource
 {
@@ -102,9 +107,6 @@ class ProductResource extends Resource
                             }
                             $set('slug', Str::slug($state));
                             }),
-
-
-                            
 
                             Forms\Components\TextInput::make('slug')
                             ->required()
@@ -194,14 +196,15 @@ class ProductResource extends Resource
                             Forms\Components\TextInput::make('isbn'),
                             Forms\Components\TextInput::make('isbn10'),
                             Forms\Components\TextInput::make('isbn13'),
-                            Forms\Components\Select::make('medium')->options([
+                            Forms\Components\Select::make('type')->options([
 
                                 'Hindi'=>'Hindi',
                                 'English'=>'English',
                                 'Other'=>'Other',
 
 
-                            ]),
+                            ])
+                            ->label('Medium'),
                             Forms\Components\DatePicker::make('published_at')
                             ->label('Publication Date')
                             ->required(),
@@ -221,13 +224,34 @@ class ProductResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make(name: 'image'),
                 Tables\Columns\TextColumn::make(name: 'name'),
-                Tables\Columns\TextColumn::make(name: 'production.name'),
+                Tables\Columns\TextColumn::make(name: 'production.name')
+                ->label("Publication"),
                 Tables\Columns\IconColumn::make(name: 'is_visible')
                     ->boolean(),
                 Tables\Columns\TextColumn::make(name: 'price'),
                 Tables\Columns\TextColumn::make(name: 'quantity'),
-                Tables\Columns\TextColumn::make(name: 'published_at'),
-                Tables\Columns\TextColumn::make(name: 'type'),
+            ])
+            ->headerActions([
+                CreateAction::make(),
+                Action::make('import')
+                    ->label('Import Products')
+                    ->action(function (array $data) {
+                        $file = storage_path('app/public/' . $data['file']);
+                        if (!file_exists($file)) {
+                            throw new \Exception("File not found: " . $file);
+                        }
+
+                        Excel::import(new ProductsImport(), $file);
+                    })
+                    ->form([
+                        FileUpload::make('file')
+                            ->label('Excel File')
+                            ->required()
+                            ->acceptedFileTypes([
+                                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                'application/vnd.ms-excel',
+                            ]),
+                    ]),
             ])
             ->filters([
                 //
@@ -255,6 +279,7 @@ class ProductResource extends Resource
             'index' => Pages\ListProducts::route('/'),
             'create' => Pages\CreateProduct::route('/create'),
             'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'import' => Pages\ImportProducts::route('/import'),
         ];
     }
 }
