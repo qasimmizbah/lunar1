@@ -29,7 +29,7 @@ class ProductsImport implements ToModel, WithHeadingRow
             'name' => $row['name'] ?? null,
             'slug' => $row['slug'] ?? null,
             'sku' => $row['sku'] ?? null,
-            'image' => $row['image'] ?? null,
+            'image' => $row['img'] ?? null,
             'gallery' => $row['gallery'] ?? null,
             'description' => $row['description'] ?? null,
             'meta_tag_title' => $row['meta_title'] ?? null,
