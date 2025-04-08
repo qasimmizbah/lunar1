@@ -23,10 +23,10 @@ Route::middleware(['auth'])->group(function () {
     Volt::route('settings/appearance', 'settings.appearance')->name('settings.appearance');
 });
 
-Route::get('/api/categories', [CategoryController::class, 'index']);
-Route::get('/api/products', [ProductController::class, 'index']);
-Route::get('/api/products/{slug}', [ProductController::class, 'show']);
-Route::get('/api/categories/{slug}/products', [ProductController::class, 'productsByCategorySlug']);
-Route::get('/api/publications', [PublicationController::class, 'index']);
+ Route::get('/api/categories', [CategoryController::class, 'index']);
+ Route::get('/api/products', [ProductController::class, 'index']);
+ Route::get('/api/products/{slug}', [ProductController::class, 'show']);
+ Route::get('/api/categories/{slug}/products', [ProductController::class, 'productsByCategorySlug']);
+ Route::get('/api/publications', [PublicationController::class, 'index']);
 
 require __DIR__.'/auth.php';

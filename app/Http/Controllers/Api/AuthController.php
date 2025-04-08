@@ -2,68 +2,104 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use App\Models\User;
+use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    // Register
     public function register(Request $request)
     {
-        $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6|confirmed',
+        try {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:customers',
+            'password' => 'required|string|min:8|confirmed',
         ]);
 
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
+        $customer = Customer::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $request['phone'],
+            'city' => $request['city'],
+            'address' => $request['address'],
+            'zip_code' => $request['zip_code'],
+            
+            'date_of_birth' => $request['date_of_birth'],
+            'password' => Hash::make($validated['password']),
         ]);
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $customer->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'user'  => $user,
-            'token' => $token,
-        ], 201);
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'customer' => $customer,
+        ]);
+    }
+    catch (\Exception $e) {
+        logger()->error('Registration error:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
     }
 
-    // Login
     public function login(Request $request)
     {
+        try {
         $request->validate([
-            'email'    => 'required|email',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $customer = Customer::where('email', $request->email)->first();
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-            ], 401);
+        if (!$customer || !Hash::check($request->password, $customer->password)) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = $customer->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'user'  => $user,
-            'token' => $token,
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'customer' => $customer,
         ]);
+        }
+        catch (\Exception $e) {
+            logger()->error('Registration error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+
     }
 
-    // Logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 
-        return response()->json([
-            'message' => 'Logged out successfully',
-        ]);
+        return response()->json(['message' => 'Logged out successfully']);
+    }
+
+    public function user(Request $request)
+    {   
+        try{
+        return response()->json($request->user());
+        }
+        catch (\Exception $e) {
+            logger()->error('Registration error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
