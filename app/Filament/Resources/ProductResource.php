@@ -31,7 +31,15 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
+    protected static ?string $recordTitleAttribute = "name";
+
     protected static ?string $navigationLabel = 'Products';
+
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
 
     public static function form(Form $form): Form
     {
