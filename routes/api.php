@@ -15,4 +15,6 @@ Route::prefix('v1')->group(function () {
     });
 });
 
+
+//Route::get('/api/categories', [CategoryController::class, 'index']);
 //Route::get('/api/categories', [CategoryController::class, 'index']);
